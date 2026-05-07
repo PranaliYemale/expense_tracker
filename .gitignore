@@ -1,9 +1,17 @@
 # Backend
-backend/venv/
-backend/expenses.db
-backend/__pycache__/
-backend/*.pyc
+Backend/venv/
+Backend/expenses.db
+Backend/__pycache__/
+Backend/*.pyc
+Backend/*.pyo
 
 # Frontend
-frontend/node_modules/
-frontend/dist/
+Frontend/node_modules/
+Frontend/dist/
+Frontend/.env
+
+# General
+.env
+.DS_Store
+Thumbs.db
+*.log
