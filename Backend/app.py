@@ -9,15 +9,12 @@ import sqlite3
 from datetime import timedelta
 
 app = Flask(__name__)
+
 app.config['JWT_SECRET_KEY'] = 'expense-tracker-secret-key'
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=7)
 
 CORS(app)
 jwt = JWTManager(app)
-
-@app.route('/')
-def home():
-    return jsonify({'message': 'Backend is running!'})                                                                                          
 
 def get_db():
     conn = sqlite3.connect('expenses.db')
@@ -26,7 +23,7 @@ def get_db():
 
 
 def init_db():
-    conn = get_db()
+    conn   = get_db()
     cursor = conn.cursor()
 
     cursor.execute('''
@@ -62,7 +59,10 @@ def init_db():
 
     conn.commit()
     conn.close()
-    
+
+@app.route('/')
+def home():
+    return jsonify({'message': 'Backend is running!'})                                                                                         
 
 @app.route('/api/signup', methods=['POST'])
 def signup():
@@ -89,7 +89,6 @@ def signup():
     except sqlite3.IntegrityError:
         return jsonify({'message': 'Email already registered'}), 409
     
-    
 @app.route('/api/login', methods=['POST'])
 def login():
     data     = request.get_json()
@@ -114,7 +113,6 @@ def login():
             'email': user['email']
         }
     }), 200
-    
 @app.route('/api/expenses', methods=['GET'])
 @jwt_required()
 def get_expenses():
@@ -144,12 +142,14 @@ def add_expense():
 
     conn = get_db()
     conn.execute(
-        'INSERT INTO expenses (user_id, title, amount, category, date, note) VALUES (?, ?, ?, ?, ?, ?)',
+        '''INSERT INTO expenses
+           (user_id, title, amount, category, date, note)
+           VALUES (?, ?, ?, ?, ?, ?)''',
         (user_id, title, float(amount), category, date, note)
     )
     conn.commit()
     conn.close()
-    return jsonify({'message': 'Expense added'}), 201
+    return jsonify({'message': 'Expense added'}), 201  
 
 
 @app.route('/api/expenses/<int:expense_id>', methods=['PUT'])
@@ -172,9 +172,14 @@ def update_expense(expense_id):
         '''UPDATE expenses
            SET title = ?, amount = ?, category = ?, date = ?, note = ?
            WHERE id = ?''',
-        (data.get('title'), float(data.get('amount')),
-         data.get('category'), data.get('date'),
-         data.get('note', ''), expense_id)
+        (
+            data.get('title'),
+            float(data.get('amount')),
+            data.get('category'),
+            data.get('date'),
+            data.get('note', ''),
+            expense_id
+        )
     )
     conn.commit()
     conn.close()
@@ -242,7 +247,6 @@ def set_budget():
     conn.close()
     return jsonify({'message': 'Budget saved'}), 200
 
-
 @app.route('/api/summary', methods=['GET'])
 @jwt_required()
 def get_summary():
@@ -257,7 +261,8 @@ def get_summary():
     ).fetchall()
 
     budget = conn.execute(
-        'SELECT monthly_budget FROM budgets WHERE user_id = ?', (user_id,)
+        'SELECT monthly_budget FROM budgets WHERE user_id = ?',
+        (user_id,)
     ).fetchone()
 
     conn.close()
@@ -281,6 +286,4 @@ def get_summary():
 if __name__ == '__main__':
     init_db()
     print('Database initialised ✓')
-    app.run(debug=True, port=5000)
-    
-    
+    app.run(debug=True, port=5000)          
